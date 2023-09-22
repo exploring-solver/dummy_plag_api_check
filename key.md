@@ -1,0 +1,3 @@
+Client key:
+925b2aff0f53a0a2048f
+Client Secret: d6c89b67f2c80abcb8639e9cc6dbb6d576574735

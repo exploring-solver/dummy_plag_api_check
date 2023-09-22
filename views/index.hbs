@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload and API Request</title>
+</head>
+
+<body>
+    <h1>File Upload and API Request</h1>
+    <form id="uploadForm" enctype="multipart/form-data" action="/upload" method="post">
+        <label for="fileInput">Choose a File:</label>
+        <input type="file" name="file" id="fileInput" accept=".txt, .pdf, .docx" required>
+        <button type="submit">Upload and Analyze</button>
+    </form>
+    <div id="responseContainer">
+        <!-- API Response will be displayed here -->
+    </div>
+    <!-- Add this div to display the similarity check response -->
+    <div id="similarityCheckResponseContainer">
+        <!-- Similarity Check Response will be displayed here -->
+    </div>
+
+    <script>
+        // Function to display the similarity check response
+        function displaySimilarityCheckResponse(similarityCheckResponse) {
+            const similarityCheckResponseContainer = document.getElementById('similarityCheckResponseContainer');
+
+            if (similarityCheckResponseContainer) {
+                if (similarityCheckResponse.status === 200) {
+                    const responseData = similarityCheckResponse.data;
+                    similarityCheckResponseContainer.innerHTML = `<p>Similarity Check Response:</p><pre>${JSON.stringify(responseData, null, 2)}</pre>`;
+                } else {
+                    similarityCheckResponseContainer.innerHTML = `<p>Error: ${similarityCheckResponse.status} - ${similarityCheckResponse.statusText}</p>`;
+                }
+            }
+        }
+
+        // Modify the existing code inside the event listener to call the displaySimilarityCheckResponse function
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('fileInput');
+            const responseContainer = document.getElementById('responseContainer');
+
+            // Check if a file is selected
+            if (!fileInput.files || fileInput.files.length === 0) {
+                responseContainer.innerHTML = '<p>Please select a file to upload.</p>';
+                return;
+            }
+
+            try {
+                // Create a FormData object to send the file
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                // Make the API request to your server for uploading
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    responseContainer.innerHTML = `<p>API Response:</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+                    // After uploading, initiate similarity check and display the response
+                    const fileID = data.data.id;
+                    const similarityCheckResponse = await initiateSimilarityCheck(fileID);
+                    displaySimilarityCheckResponse(similarityCheckResponse);
+                } else {
+                    responseContainer.innerHTML = `<p>Error: ${response.status} - ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                console.error('API Request Error:', error);
+                responseContainer.innerHTML = '<p>An error occurred while making the API request.</p>';
+            }
+        });
+    </script>
+</body>
+
+</html>
